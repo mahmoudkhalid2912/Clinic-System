@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using ClinicManagementSystem.Application.Commands.Authentication.Login;
+using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -13,11 +14,17 @@ public static class ServiceCollectionExtenstions
 
         // Add MediatR
         services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(assembly));
+        {
+            cfg.RegisterServicesFromAssembly(assembly);
+            // تأكد من ترتيب الـ behaviors
+            cfg.AddOpenBehavior(typeof(ValidationPipelineBehavior<,>));
+        });
 
-        // Add FluentValidation
-        services.AddValidatorsFromAssembly(assembly);
+        // Add FluentValidation - تأكد من تسجيل جميع الـ validators
+        services.AddValidatorsFromAssembly(assembly, ServiceLifetime.Scoped);
 
+        // OR يمكنك إضافة这种行为 للتأكد
+        services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>(ServiceLifetime.Scoped);
 
 
 
