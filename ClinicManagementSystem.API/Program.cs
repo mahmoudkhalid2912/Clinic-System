@@ -15,7 +15,20 @@ builder.Services.AddApplication();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
+app.UseHttpsRedirection();
+
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+app.MapControllers();
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -23,8 +36,4 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-app.MapControllers();
-
 app.Run();
-

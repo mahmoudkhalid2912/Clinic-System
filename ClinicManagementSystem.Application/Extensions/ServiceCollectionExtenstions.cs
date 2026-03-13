@@ -23,7 +23,7 @@ public static class ServiceCollectionExtenstions
         // Add FluentValidation - تأكد من تسجيل جميع الـ validators
         services.AddValidatorsFromAssembly(assembly, ServiceLifetime.Scoped);
 
-        // OR يمكنك إضافة这种行为 للتأكد
+     
         services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>(ServiceLifetime.Scoped);
 
 

@@ -1,10 +1,12 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
+using ClinicManagementSystem.Application.Abstractions.User;
 using ClinicManagementSystem.Domain.Settings;
 using ClinicManagementSystem.Infrastructure.Identity;
 using ClinicManagementSystem.Infrastructure.Persistence;
 using ClinicManagementSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,8 @@ public static class ServiceCollectionExtenstions
             options.UseSqlServer(connectionString));
 
         services.AddAuthentication(configuration);
+        services.AddUserService();
+
 
 
         return services;
@@ -34,7 +38,8 @@ public static class ServiceCollectionExtenstions
     private static IServiceCollection AddAuthentication(this IServiceCollection services,IConfiguration configuration)
     {
         services.AddIdentity<ApplicationUser, IdentityRole>().
-             AddEntityFrameworkStores<ClinicDbContext>();
+             AddEntityFrameworkStores<ClinicDbContext>()
+             .AddDefaultTokenProviders();
 
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddSingleton<IJwtProvider, JwtProvider>();
@@ -63,6 +68,19 @@ public static class ServiceCollectionExtenstions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSetting?.SecretKey!))
             };
         });
+
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.Password.RequiredLength = 8;
+           // options.SignIn.RequireConfirmedEmail = true;
+            options.User.RequireUniqueEmail = true;
+        });
+        return services;
+    }
+
+    private static IServiceCollection AddUserService(this IServiceCollection services)
+    {
+        services.AddScoped<IUserService, UserService>();
         return services;
     }
 

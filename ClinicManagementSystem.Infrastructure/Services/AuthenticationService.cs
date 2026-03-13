@@ -1,59 +1,184 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
+using ClinicManagementSystem.Application.Commands.Authentication.Register;
 using ClinicManagementSystem.Application.Dtos.Authentication;
 using ClinicManagementSystem.Domain.Abstractions;
 using ClinicManagementSystem.Domain.Errors;
 using ClinicManagementSystem.Infrastructure.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 
 namespace ClinicManagementSystem.Infrastructure.Services;
 
-public class AuthenticationService(UserManager<ApplicationUser> userManager,IJwtProvider jwtProvider) : IAuthenticationService
+public class AuthenticationService(
+    UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
+    IJwtProvider jwtProvider) : IAuthenticationService
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
     private readonly IJwtProvider _jwtProvider = jwtProvider;
 
-    private readonly int _refreshTokenExpiryInDays = 7; // Example refresh token expiry time
+    private readonly int _refreshTokenExpiryInDays = 25;
+    private readonly int _maxRefreshTokens = 50;
 
-    public async Task<Result<LoginResponseDto?>> LoginAsync(string email, string password,CancellationToken cancellationToken=default)
+    public async Task<Result<LoginResponseDto?>> LoginAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken = default)
     {
-        //check if user exists
         var user = await _userManager.FindByEmailAsync(email);
 
         if (user == null)
-            return Result.Failure<LoginResponseDto?>(AuthErrors.UserNotFound);
+            return Result.Failure<LoginResponseDto?>(UserError.UserNotFound);
 
-        //check if password is correct
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
+        var signInResult = await _signInManager.PasswordSignInAsync(user, password, false, false);
 
-        if (!isPasswordValid)
-            return Result.Failure<LoginResponseDto?>(AuthErrors.InvalidCredentials);
+        if (!signInResult.Succeeded)
+        {
+            return signInResult.IsLockedOut
+                ? Result.Failure<LoginResponseDto?>(UserError.UserLocked)
+                : Result.Failure<LoginResponseDto?>(AuthErrors.InvalidCredentials);
+        }
 
-        // manual mapping to ApplicationUserDto for token generation
-        ApplicationUserDto applicationUserDto = new ApplicationUserDto
+        return await GenerateAuthResponseAsync(user);
+    }
+
+    public async Task<Result<LoginResponseDto?>> GenerateRefreshTokenasync(
+        string token,
+        string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        var userId = _jwtProvider.ValidateToken(token);
+
+        if (userId == null)
+            return Result.Failure<LoginResponseDto?>(AuthErrors.InvaildToken);
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+            return Result.Failure<LoginResponseDto?>(UserError.UserNotFound);
+
+        var refreshTokenEntity =
+            user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken && rt.IsActive);
+
+        if (refreshTokenEntity == null)
+            return Result.Failure<LoginResponseDto?>(AuthErrors.RefreshTokenInvalid);
+
+        refreshTokenEntity.RevokedOn = DateTime.UtcNow;
+
+        return await GenerateAuthResponseAsync(user);
+    }
+
+    public async Task<Result<bool>> RevokeRefreshTokenasync(
+        string token,
+        string refreshToken,
+        CancellationToken cancellationToken)
+    {
+        var userId = _jwtProvider.ValidateToken(token);
+
+        if (userId == null)
+            return Result.Failure<bool>(AuthErrors.InvaildToken);
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+            return Result.Failure<bool>(UserError.UserNotFound);
+
+        var refreshTokenEntity =
+            user.RefreshTokens.FirstOrDefault(rt => rt.Token == refreshToken && rt.IsActive);
+
+        if (refreshTokenEntity == null)
+            return Result.Failure<bool>(AuthErrors.RefreshTokenInvalid);
+
+        refreshTokenEntity.RevokedOn = DateTime.UtcNow;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            var error = updateResult.Errors.First();
+
+            return Result.Failure<bool>(
+                new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
+        }
+
+        return Result.Success(true);
+    }
+
+    public async Task<Result<LoginResponseDto?>> RegisterAsync(
+        RegisterCommand request,
+        CancellationToken cancellationToken)
+    {
+        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+
+        if (existingUser != null)
+            return Result.Failure<LoginResponseDto?>(UserError.DublicatedEmail);
+
+        var user = new ApplicationUser
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            FullName = request.FullName,
+            PhoneNumber = request.PhoneNumber
+        };
+        var result = await _userManager.CreateAsync(user, request.Password);
+        
+        if (!result.Succeeded)
+        {
+            var error = result.Errors.First();
+
+            return Result.Failure<LoginResponseDto?>(
+                new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
+        }
+
+        return await GenerateAuthResponseAsync(user);
+    }
+
+    private async Task<Result<LoginResponseDto?>> GenerateAuthResponseAsync(ApplicationUser user)
+    {
+        var applicationUserDto = new ApplicationUserDto
         {
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email
         };
 
-
-        // generate JWT token
         var (token, expiresIn) = _jwtProvider.GenerateToken(applicationUserDto);
 
-
-        // generate refresh token
         var refreshToken = GenerateRefreshToken();
         var refreshTokenExpiration = DateTime.UtcNow.AddDays(_refreshTokenExpiryInDays);
+
         user.RefreshTokens.Add(new RefreshToken
         {
             Token = refreshToken,
-           ExpiresOn = refreshTokenExpiration
+            ExpiresOn = refreshTokenExpiration
         });
 
-        await _userManager.UpdateAsync(user);
+        // remove old tokens if more than 50
+        if (user.RefreshTokens.Count > _maxRefreshTokens)
+        {
+            var tokensToRemove = user.RefreshTokens
+                .OrderBy(rt => rt.CreatedOn)
+                .Take(user.RefreshTokens.Count - _maxRefreshTokens)
+                .ToList();
 
-        //return user info and token
+            foreach (var tokenToRemove in tokensToRemove)
+            {
+                user.RefreshTokens.Remove(tokenToRemove);
+            }
+        }
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            var error = updateResult.Errors.First();
+
+            return Result.Failure<LoginResponseDto?>(
+                new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
+        }
+
         var response = new LoginResponseDto
         {
             Id = user.Id,
@@ -68,102 +193,8 @@ public class AuthenticationService(UserManager<ApplicationUser> userManager,IJwt
         return Result.Success(response)!;
     }
 
-
-    
-
-    public async Task<Result<LoginResponseDto?>> GenerateRefreshTokenasync(string Token, string RefreshToken, CancellationToken cancellationToken)
-    {
-        var userId = _jwtProvider.ValidateToken(Token);
-
-        if (userId == null)
-            return Result.Failure<LoginResponseDto?>(AuthErrors.InvalidToken);
-
-        var user = await _userManager.FindByIdAsync(userId);
-
-        if (user == null)
-            return Result.Failure<LoginResponseDto?>(AuthErrors.UserNotFound);
-
-        var refreshTokenEntity =
-            user.RefreshTokens.FirstOrDefault(rt => rt.Token == RefreshToken && rt.IsActive);
-
-        if (refreshTokenEntity == null)
-            return Result.Failure<LoginResponseDto?>(AuthErrors.RefreshTokenNotFound);
-
-        refreshTokenEntity.RevokedOn = DateTime.UtcNow;
-
-        //manual mapping to ApplicationUserDto for token generation
-
-        ApplicationUserDto applicationUserDto = new ApplicationUserDto
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email
-        };
-
-        // generate JWT token
-        var (newtoken, expiresIn) = _jwtProvider.GenerateToken(applicationUserDto);
-
-
-        // generate refresh token
-        var newrefreshToken = GenerateRefreshToken();
-        var newrefreshTokenExpiration = DateTime.UtcNow.AddDays(_refreshTokenExpiryInDays);
-        user.RefreshTokens.Add(new RefreshToken
-        {
-            Token = newrefreshToken,
-            ExpiresOn = newrefreshTokenExpiration
-        });
-
-        await _userManager.UpdateAsync(user);
-
-        //return user info and token
-        var response = new LoginResponseDto
-        {
-            Id = user.Id,
-            FullName = user.FullName,
-            Email = user.Email,
-            Token = newtoken,
-            ExpiresIn = expiresIn,
-            RefreshToken = newrefreshToken,
-            RefreshTokenExpriation = newrefreshTokenExpiration
-        };
-
-        return Result.Success(response)!;
-    }
-
-
-  
-
-    public async Task<Result<bool>> RevokeRefreshTokenasync(string Token, string RefreshToken, CancellationToken cancellationToken)
-    {
-        var userId = _jwtProvider.ValidateToken(Token);
-
-        if (userId == null)
-            return Result.Failure<bool>(AuthErrors.InvalidToken);
-
-        var user = await _userManager.FindByIdAsync(userId);
-
-        if (user == null)
-            return Result.Failure<bool>(AuthErrors.UserNotFound);
-
-        var refreshTokenEntity =
-            user.RefreshTokens.FirstOrDefault(rt => rt.Token == RefreshToken && rt.IsActive);
-
-        if (refreshTokenEntity == null)
-            return Result.Failure<bool>(AuthErrors.RefreshTokenNotFound);
-
-        refreshTokenEntity.RevokedOn = DateTime.UtcNow;
-
-        await _userManager.UpdateAsync(user);
-
-        return Result.Success(true);
-    }
-
-
-
     private static string GenerateRefreshToken()
     {
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
-
-    
 }

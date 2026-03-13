@@ -1,6 +1,6 @@
 ﻿using ClinicManagementSystem.Application.Commands.Authentication.Login;
 using ClinicManagementSystem.Application.Commands.Authentication.RefreshToken;
-using ClinicManagementSystem.Domain.Abstractions;
+using ClinicManagementSystem.Application.Commands.Authentication.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,32 +11,42 @@ namespace ClinicManagementSystem.API.Controllers;
 public class AuthController(IMediator mediator) : ControllerBase
 {
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    public async Task<IActionResult> Login(
+        [FromBody] LoginCommand command,
+        CancellationToken cancellationToken)
     {
-        var response = await mediator.Send(command);
+        var result = await mediator.Send(command, cancellationToken);
 
-        return response.IsSuccess
-            ? Ok(response.Value)
-            : response.ToSimpleError();
+        return result.ToApiResponse("Login successfully");
     }
 
     [HttpPost("refreshToken")]
-    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
+    public async Task<IActionResult> RefreshToken(
+        [FromBody] RefreshTokenCommand command,
+        CancellationToken cancellationToken)
     {
-        var response = await mediator.Send(command);
+        var result = await mediator.Send(command, cancellationToken);
 
-        return response.IsSuccess
-            ? Ok(response.Value)
-            : response.ToSimpleError();
+        return result.ToApiResponse("Token refreshed successfully");
     }
 
     [HttpPost("revokeRefreshToken")]
-    public async Task<IActionResult> RevokeRefreshToken([FromBody] RevokeRefreshTokenCommand command)
+    public async Task<IActionResult> RevokeRefreshToken(
+        [FromBody] RevokeRefreshTokenCommand command,
+        CancellationToken cancellationToken)
     {
-        var response = await mediator.Send(command);
+        var result = await mediator.Send(command, cancellationToken);
 
-        return response.IsSuccess
-            ? Ok()
-            : response.ToSimpleError();
+        return result.ToApiResponse("Refresh token revoked successfully");
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(command, cancellationToken);
+
+        return result.ToApiResponse("Register successfully");
     }
 }
