@@ -12,12 +12,13 @@ public class RegisterCommandValidator:AbstractValidator<RegisterCommand>
 
         RuleFor(x => x.Email).NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Invalid email format.");
-
-        // password at least 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character
-        RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required")
-            .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
-            .WithMessage("password at least 8 characters, " +
-            "at least one uppercase letter, one lowercase letter, one number and one special character");
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Password is required")
+            .MinimumLength(8).WithMessage("Password must be at least 8 characters")
+            .Must(password => password.Any(char.IsUpper)).WithMessage("Password must contain at least one uppercase letter")
+            .Must(password => password.Any(char.IsLower)).WithMessage("Password must contain at least one lowercase letter")
+            .Must(password => password.Any(char.IsDigit)).WithMessage("Password must contain at least one number")
+            .Must(password => password.Any(ch => "!@#$%^&*()_+/".Contains(ch))).WithMessage("Password must contain at least one special character from (!@#$%^&*()_+/)");
 
         // E.164 format: +[country code][subscriber number including area code]
         RuleFor(x => x.PhoneNumber).NotEmpty().WithMessage("Phone Number is required.")

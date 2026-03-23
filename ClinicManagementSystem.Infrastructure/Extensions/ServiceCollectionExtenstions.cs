@@ -26,7 +26,11 @@ public static class ServiceCollectionExtenstions
         services.AddAuthentication(configuration);
         services.AddUserService();
 
+        services.Configure<MailOptions>(configuration.GetSection(nameof(MailOptions)));
 
+        services.AddScoped<IEmailSender, EmailSender>();
+
+        
 
         return services;
     }

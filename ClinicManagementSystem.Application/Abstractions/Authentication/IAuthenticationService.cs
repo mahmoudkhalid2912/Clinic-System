@@ -1,4 +1,5 @@
 ﻿using ClinicManagementSystem.Application.Commands.Authentication.Register;
+using ClinicManagementSystem.Application.Commands.Authentication.ResetPassword;
 using ClinicManagementSystem.Application.Dtos.Authentication;
 using ClinicManagementSystem.Domain.Abstractions;
 
@@ -28,4 +29,8 @@ public interface IAuthenticationService
     Task<Result<LoginResponseDto?>> RegisterAsync(
         RegisterCommand request,
         CancellationToken cancellationToken = default);
+
+    Task<Result<ForgetPasswordResponse>> SendResetPasswordEmailAsync(string email, CancellationToken cancellationToken = default);
+
+      Task<Result> ResetPasswordAsync(ResetPasswordCommand request,CancellationToken cancellationToken=default);
 }

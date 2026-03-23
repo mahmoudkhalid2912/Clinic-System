@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace ClinicManagementSystem.Application.Commands.User;
+namespace ClinicManagementSystem.Application.Commands.User.ChangePassword;
 
 public class ChangePasswordCommandValidator:AbstractValidator<ChangePasswordCommand>
 {

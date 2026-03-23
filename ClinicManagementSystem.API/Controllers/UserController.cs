@@ -1,9 +1,8 @@
 ﻿using ClinicManagementSystem.API.Extensions;
-using ClinicManagementSystem.Application.Commands.User;
+using ClinicManagementSystem.Application.Commands.User.ChangePassword;
 using ClinicManagementSystem.Application.Query.User;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicManagementSystem.API.Controllers;

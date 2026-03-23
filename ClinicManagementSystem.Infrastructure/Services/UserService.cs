@@ -1,5 +1,5 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.User;
-using ClinicManagementSystem.Application.Commands.User;
+using ClinicManagementSystem.Application.Commands.User.ChangePassword;
 using ClinicManagementSystem.Application.Dtos.User;
 using ClinicManagementSystem.Domain.Abstractions;
 using ClinicManagementSystem.Infrastructure.Identity;

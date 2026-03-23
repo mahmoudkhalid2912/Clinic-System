@@ -1,24 +1,33 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
 using ClinicManagementSystem.Application.Commands.Authentication.Register;
+using ClinicManagementSystem.Application.Commands.Authentication.ResetPassword;
 using ClinicManagementSystem.Application.Dtos.Authentication;
 using ClinicManagementSystem.Domain.Abstractions;
 using ClinicManagementSystem.Domain.Errors;
+using ClinicManagementSystem.Infrastructure.Helpers;
 using ClinicManagementSystem.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace ClinicManagementSystem.Infrastructure.Services;
 
 public class AuthenticationService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    IJwtProvider jwtProvider) : IAuthenticationService
+    IJwtProvider jwtProvider,IHttpContextAccessor httpContextAccessor
+    ,IEmailSender emailSender,ILogger<AuthenticationService>logger) : IAuthenticationService
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
     private readonly IJwtProvider _jwtProvider = jwtProvider;
-
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly IEmailSender _emailSender = emailSender;
+    private readonly ILogger<AuthenticationService> _logger = logger;
     private readonly int _refreshTokenExpiryInDays = 25;
     private readonly int _maxRefreshTokens = 50;
 
@@ -193,8 +202,96 @@ public class AuthenticationService(
         return Result.Success(response)!;
     }
 
+    public async Task<Result<ForgetPasswordResponse>> SendResetPasswordEmailAsync(
+    string email,
+    CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        var code = GenerateVerificationCode();
+        var response = new ForgetPasswordResponse
+        {
+            VerificationCode = code
+        };
+        if (user == null)
+       
+            return Result.Success(response);
+
+        user.ResetPasswordCode = code;
+        user.ResetPasswordCodeExpiry = DateTime.UtcNow.AddMinutes(10);
+
+        await _userManager.UpdateAsync(user);
+
+        await SendResetPasswordEmail(user, code);
+
+        return Result.Success(response);
+    }
+    public async Task<Result> ResetPasswordAsync(
+     ResetPasswordCommand request,
+     CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+            return Result.Failure(AuthErrors.InvaildToken);
+
+        if (user.ResetPasswordCode != request.Code)
+            return Result.Failure(AuthErrors.InvaildToken);
+
+        if (user.ResetPasswordCodeExpiry < DateTime.UtcNow)
+            return Result.Failure(AuthErrors.InvaildToken);
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var result = await _userManager.ResetPasswordAsync(
+            user,
+            token,
+            request.NewPassword);
+
+        if (!result.Succeeded)
+        {
+            var error = result.Errors.First();
+
+            return Result.Failure(
+                new Error(error.Code, error.Description, StatusCodes.Status400BadRequest));
+        }
+
+        user.ResetPasswordCode = null;
+        user.ResetPasswordCodeExpiry = null;
+
+        await _userManager.UpdateAsync(user);
+
+        return Result.Success();
+    }
+
+
     private static string GenerateRefreshToken()
     {
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
+
+    private async Task SendResetPasswordEmail(ApplicationUser user, string code)
+    {
+        var emailBody = EmailBuilder.Build(
+            "ForgetPassword",
+            new Dictionary<string, string>
+            {
+            { "name", user.FullName },
+            { "code", code }
+            });
+
+        await _emailSender.SendEmailAsync(
+            user.Email!,
+            "Password Reset Code",
+            emailBody
+        );
+    }
+
+  
+
+    private static string GenerateVerificationCode()
+    {
+        return Random.Shared.Next(100000, 999999).ToString();
+    }
+
+    
 }

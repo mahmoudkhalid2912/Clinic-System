@@ -1,7 +1,7 @@
 ﻿using ClinicManagementSystem.Domain.Abstractions;
 using MediatR;
 
-namespace ClinicManagementSystem.Application.Commands.User;
+namespace ClinicManagementSystem.Application.Commands.User.ChangePassword;
 
 public class ChangePasswordCommand:IRequest<Result>
 {
