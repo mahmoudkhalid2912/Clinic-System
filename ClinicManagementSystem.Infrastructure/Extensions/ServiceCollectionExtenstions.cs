@@ -1,7 +1,9 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
 using ClinicManagementSystem.Application.Abstractions.User;
+using ClinicManagementSystem.Domain.Abstractions.IUnitOfWork;
 using ClinicManagementSystem.Domain.Settings;
 using ClinicManagementSystem.Infrastructure.Identity;
+using ClinicManagementSystem.Infrastructure.persistence.UnitOfWork;
 using ClinicManagementSystem.Infrastructure.Persistence;
 using ClinicManagementSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -30,8 +32,8 @@ public static class ServiceCollectionExtenstions
 
         services.AddScoped<IEmailSender, EmailSender>();
 
-        
 
+        services.AddScoped<IUnitOfWork, UnitOfWork>(); 
         return services;
     }
 
