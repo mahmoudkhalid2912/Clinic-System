@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ClinicManagementSystem.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace ClinicManagementSystem.Infrastructure.Identity;
@@ -14,4 +15,6 @@ public class ApplicationUser: IdentityUser
     public string? ResetPasswordCode { get; set; }
 
     public DateTime? ResetPasswordCodeExpiry { get; set; }
+
+    public ICollection<Booking> Bookings { get; set; }
 }
