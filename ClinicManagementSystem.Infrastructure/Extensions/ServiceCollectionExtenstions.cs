@@ -1,4 +1,5 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
+using ClinicManagementSystem.Application.Abstractions.Payment;
 using ClinicManagementSystem.Application.Abstractions.User;
 using ClinicManagementSystem.Domain.Abstractions.IUnitOfWork;
 using ClinicManagementSystem.Domain.Settings;
@@ -30,8 +31,10 @@ public static class ServiceCollectionExtenstions
 
         services.Configure<MailOptions>(configuration.GetSection(nameof(MailOptions)));
 
-        services.AddScoped<IEmailSender, EmailSender>();
+        services.Configure<StripeSettings>(configuration.GetSection(StripeSettings.SectionName));
 
+        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddScoped<IStripeService, StripeService>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>(); 
         return services;
