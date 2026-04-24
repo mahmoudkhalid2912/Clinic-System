@@ -1,10 +1,14 @@
 ﻿using ClinicManagementSystem.Application.Abstractions.Authentication;
 using ClinicManagementSystem.Application.Abstractions.User;
+using ClinicManagementSystem.Domain.Abstractions.IRepository;
 using ClinicManagementSystem.Domain.Abstractions.IUnitOfWork;
 using ClinicManagementSystem.Domain.Settings;
 using ClinicManagementSystem.Infrastructure.Identity;
+using ClinicManagementSystem.Infrastructure.persistence.Repository;
 using ClinicManagementSystem.Infrastructure.persistence.UnitOfWork;
 using ClinicManagementSystem.Infrastructure.Persistence;
+using ClinicManagementSystem.Infrastructure.Persistence.Repository;
+using ClinicManagementSystem.Infrastructure.SeedData;
 using ClinicManagementSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -33,7 +37,11 @@ public static class ServiceCollectionExtenstions
         services.AddScoped<IEmailSender, EmailSender>();
 
 
-        services.AddScoped<IUnitOfWork, UnitOfWork>(); 
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IScheduleRepository, ScheduleRepository>();
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<ScheduleSeederService>();
+
         return services;
     }
 

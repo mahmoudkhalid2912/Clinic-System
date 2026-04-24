@@ -1,7 +1,6 @@
 using ClinicManagementSystem.Application.Extensions;
 using ClinicManagementSystem.Infrastructure.Extensions;
-using ClinicManagementSystem.Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
+using ClinicManagementSystem.Infrastructure.SeedData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +23,14 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var scheduleSeeder = scope.ServiceProvider.GetRequiredService<ScheduleSeederService>();
+    await scheduleSeeder.SeedAsync();
+}
+
+
 app.UseCors("AllowAll");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

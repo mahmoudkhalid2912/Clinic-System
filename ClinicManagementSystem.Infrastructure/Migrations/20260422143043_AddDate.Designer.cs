@@ -4,6 +4,7 @@ using ClinicManagementSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClinicManagementSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(ClinicDbContext))]
-    partial class ClinicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422143043_AddDate")]
+    partial class AddDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,26 +37,15 @@ namespace ClinicManagementSystem.Infrastructure.Migrations
                     b.Property<TimeSpan>("AppointmentTime")
                         .HasColumnType("time");
 
-                    b.Property<string>("BookedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("datetime2");
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PatientName")
+                    b.Property<string>("PatientId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PatientPhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<Guid>("ScheduleId")
                         .HasColumnType("uniqueidentifier");
@@ -64,7 +56,7 @@ namespace ClinicManagementSystem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookedByUserId");
+                    b.HasIndex("PatientId");
 
                     b.HasIndex("ScheduleId", "AppointmentDate", "AppointmentTime")
                         .IsUnique();
@@ -459,7 +451,7 @@ namespace ClinicManagementSystem.Infrastructure.Migrations
                 {
                     b.HasOne("ClinicManagementSystem.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany("Bookings")
-                        .HasForeignKey("BookedByUserId")
+                        .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

@@ -1,5 +1,6 @@
 ﻿using ClinicManagementSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace ClinicManagementSystem.Infrastructure.Entity_Configuration;
 
@@ -10,6 +11,8 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
                .HasConversion<string>();
 
         builder.HasIndex(s => s.Day)
-               .IsUnique();
+               .IsUnique(false);
+
+        
     }
 }

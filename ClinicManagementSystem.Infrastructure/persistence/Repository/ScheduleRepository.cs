@@ -1,10 +1,8 @@
 ﻿using ClinicManagementSystem.Domain.Abstractions.IRepository;
 using ClinicManagementSystem.Domain.Entities;
+using ClinicManagementSystem.Domain.Entities.Enums;
 using ClinicManagementSystem.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
+using Microsoft.EntityFrameworkCore;
 namespace ClinicManagementSystem.Infrastructure.persistence.Repository
 {
     public class ScheduleRepository:GeneralRepository<Schedule>,IScheduleRepository
@@ -16,5 +14,10 @@ namespace ClinicManagementSystem.Infrastructure.persistence.Repository
             _context = context;
         }
 
+        public async Task<Schedule?> GetByDateAsync(DateTime date, CancellationToken cancellationToken)
+        {
+            return await _context.Schedules
+        .FirstOrDefaultAsync(s => s.Date.Date == date.Date, cancellationToken);
+        }
     }
 }

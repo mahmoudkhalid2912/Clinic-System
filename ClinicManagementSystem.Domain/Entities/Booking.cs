@@ -15,8 +15,13 @@ public class Booking
     public TimeSpan Duration { get; set; }
     public BookingStatus Status { get; set; }
 
-    public string PatientId { get; set; } = string.Empty;
+    public string BookedByUserId { get; set; } = string.Empty;
 
+    public string PatientName { get; set; }
+
+    public string PatientPhone { get; set; }
+
+    public string ? Notes { get; set; }
     public Guid ScheduleId { get; set; }
 
     public Payment? Payment { get; set; }

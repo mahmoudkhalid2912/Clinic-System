@@ -2,6 +2,7 @@
 using ClinicManagementSystem.Domain.Abstractions.IUnitOfWork;
 using ClinicManagementSystem.Infrastructure.persistence.Repository;
 using ClinicManagementSystem.Infrastructure.Persistence;
+using ClinicManagementSystem.Infrastructure.Persistence.Repository;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +14,7 @@ namespace ClinicManagementSystem.Infrastructure.persistence.UnitOfWork
 
         private readonly ClinicDbContext _context;
 
-        public IBookinRepository BookinRepository { get; private set; }
+        public IBookingRepository BookinRepository { get; private set; }
 
         public IFeedBackRepository FeedBackRepository { get; private set; }
 
@@ -49,6 +50,10 @@ namespace ClinicManagementSystem.Infrastructure.persistence.UnitOfWork
         public void Save()
         {
             _context.SaveChanges();
+        }
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

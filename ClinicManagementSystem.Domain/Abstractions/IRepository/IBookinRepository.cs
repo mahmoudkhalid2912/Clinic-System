@@ -1,12 +1,20 @@
 ﻿using ClinicManagementSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ClinicManagementSystem.Domain.Entities.Enums;
 
-namespace ClinicManagementSystem.Domain.Abstractions.IRepository
+namespace ClinicManagementSystem.Domain.Abstractions.IRepository;
+
+public interface IBookingRepository
 {
-    public interface IBookinRepository:IGeneralRepository<Booking>
-    {
+    Task AddAsync(Booking booking);
 
-    }
+    Task<List<Booking>> GetByDateAsync(
+        Guid scheduleId,
+        DateTime date,
+        CancellationToken cancellationToken);
+
+    Task<bool> IsSlotTaken(
+        Guid scheduleId,
+        DateTime date,
+        TimeSpan time,
+        CancellationToken cancellationToken);
 }

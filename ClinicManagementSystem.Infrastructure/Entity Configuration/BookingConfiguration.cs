@@ -19,7 +19,7 @@ public class BookingConfiguration: IEntityTypeConfiguration<Booking>
 
         builder.HasOne<ApplicationUser>()
                .WithMany(u => u.Bookings)
-               .HasForeignKey(b => b.PatientId)
+               .HasForeignKey(b => b.BookedByUserId)
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Schedule>()

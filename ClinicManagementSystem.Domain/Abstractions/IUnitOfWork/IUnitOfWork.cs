@@ -7,7 +7,7 @@ namespace ClinicManagementSystem.Domain.Abstractions.IUnitOfWork
 {
     public interface IUnitOfWork : IDisposable
     {
-        IBookinRepository BookinRepository { get; }
+        IBookingRepository BookinRepository { get; }
 
         IFeedBackRepository FeedBackRepository { get; } 
 
@@ -23,5 +23,7 @@ namespace ClinicManagementSystem.Domain.Abstractions.IUnitOfWork
 
 
         void Save();
+
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

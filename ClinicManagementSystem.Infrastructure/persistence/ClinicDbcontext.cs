@@ -8,17 +8,16 @@ namespace ClinicManagementSystem.Infrastructure.Persistence
     public class ClinicDbContext(DbContextOptions<ClinicDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
        
-        DbSet<Booking> Bookings { get; set; }   
-        DbSet<Payment> Payments { get; set; }
-        DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Booking> Bookings { get; set; }   
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
 
-        DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
 
-        DbSet<Report> Reports { get; set; }
+        public DbSet<Report> Reports { get; set; }      
+        public DbSet<PatientRecord> PatientRecords { get; set; }
 
-        DbSet<PatientRecord> PatientRecords { get; set; }
-
-        DbSet<MedicalHistory> MedicalHistories { get; set; }
+        public DbSet<MedicalHistory> MedicalHistories { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfigurationsFromAssembly(typeof(ApplicationUser).Assembly);
