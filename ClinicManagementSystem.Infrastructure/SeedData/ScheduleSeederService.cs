@@ -39,7 +39,7 @@ public class ScheduleSeederService
                 Date = date.Date,
                 Day = MapDay(date.DayOfWeek),
                 StartTime = new TimeSpan(9, 0, 0),
-                EndTime = new TimeSpan(17, 0, 0),
+                EndTime = new TimeSpan(13, 0, 0),
                 SlotDuration = new TimeSpan(0, 30, 0)
             });
         }

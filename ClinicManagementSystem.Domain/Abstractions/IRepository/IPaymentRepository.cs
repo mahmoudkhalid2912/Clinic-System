@@ -1,11 +1,10 @@
-﻿using ClinicManagementSystem.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using ClinicManagementSystem.Domain.Abstractions.IRepository.ClinicManagementSystem.Domain.Abstractions.IRepository;
+using ClinicManagementSystem.Domain.Entities;
 
 namespace ClinicManagementSystem.Domain.Abstractions.IRepository
 {
     public interface IPaymentRepository:IGeneralRepository<Payment>
     {
+
     }
 }

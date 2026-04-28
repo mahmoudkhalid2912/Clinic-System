@@ -1,27 +1,27 @@
-﻿using ClinicManagementSystem.Domain.Abstractions.IRepository;
+﻿using ClinicManagementSystem.Domain.Abstractions;
+using ClinicManagementSystem.Domain.Abstractions.IRepository;
 using ClinicManagementSystem.Domain.Entities;
 using ClinicManagementSystem.Domain.Entities.Enums;
+using ClinicManagementSystem.Domain.Errors;
 using ClinicManagementSystem.Infrastructure.Persistence;
+using ClinicManagementSystem.Infrastructure.Persistence.Repository;
 using Microsoft.EntityFrameworkCore;
 
-namespace ClinicManagementSystem.Infrastructure.Persistence.Repository;
-
-public class BookingRepository : IBookingRepository
+public class BookingRepository : GeneralRepository<Booking>, IBookingRepository
 {
     private readonly ClinicDbContext _context;
 
-    public BookingRepository(ClinicDbContext context)
+    public BookingRepository(ClinicDbContext context) : base(context)
     {
         _context = context;
     }
 
-    // ➤ Add booking
     public async Task AddAsync(Booking booking)
     {
         await _context.Bookings.AddAsync(booking);
     }
 
-    // ➤ Get all bookings for a specific schedule & date
+    // ✔ FIXED: date filtering (safe range)
     public async Task<List<Booking>> GetByDateAsync(
         Guid scheduleId,
         DateTime date,
@@ -38,18 +38,42 @@ public class BookingRepository : IBookingRepository
             .ToListAsync(cancellationToken);
     }
 
-    // ➤ Check if slot is already booked
+    // ✔ FIXED: slot check (production-safe)
     public async Task<bool> IsSlotTaken(
         Guid scheduleId,
         DateTime date,
         TimeSpan time,
         CancellationToken cancellationToken)
     {
+        var start = date.Date;
+        var end = start.AddDays(1);
+
         return await _context.Bookings.AnyAsync(b =>
             b.ScheduleId == scheduleId &&
-            b.AppointmentDate == date.Date &&
+            b.AppointmentDate >= start &&
+            b.AppointmentDate < end &&
             b.AppointmentTime == time &&
-            b.Status != BookingStatus.Cancelled,
+            (
+                b.Status == BookingStatus.Confirmed ||
+                (b.Status == BookingStatus.Pending && b.ExpiresAt > DateTime.UtcNow)
+            ),
             cancellationToken);
+    }
+
+    public async Task<Result> AddBookingSafeAsync(
+    Booking booking,
+    CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _context.Bookings.AddAsync(booking, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (DbUpdateException)
+        {
+            return Result.Failure(BookingError.SlotAlreadyBooked);
+        }
     }
 }

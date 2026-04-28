@@ -121,4 +121,39 @@ public static class BookingError
         new("Booking.BookingDeletionFailed",
             "Failed to delete booking.",
             (int)HttpStatusCode.BadRequest);
+
+    public static Error BookingExpired =>
+    new("Booking.BookingExpired",
+        "This booking has expired. Please select another slot.",
+        (int)HttpStatusCode.Conflict);
+
+    public static Error PaymentRequired =>
+    new("Booking.PaymentRequired",
+        "Payment is required to confirm this booking.",
+        (int)HttpStatusCode.PaymentRequired);
+
+    public static Error PaymentAlreadyCompleted =>
+    new("Booking.PaymentAlreadyCompleted",
+        "This booking is already paid.",
+        (int)HttpStatusCode.Conflict);
+
+    public static Error InvalidSlot =>
+    new("Booking.InvalidSlot",
+        "Selected time slot is invalid.",
+        (int)HttpStatusCode.BadRequest);
+
+    public static Error ScheduleClosed =>
+    new("Booking.ScheduleClosed",
+        "Doctor is not available on this date.",
+        (int)HttpStatusCode.BadRequest);
+
+    public static Error ConcurrentBookingConflict =>
+    new("Booking.ConcurrentBookingConflict",
+        "This slot was just booked by another user. Please try again.",
+        (int)HttpStatusCode.Conflict);
+
+    public static Error InvalidPatientData =>
+    new("Booking.InvalidPatientData",
+        "Patient information is invalid.",
+        (int)HttpStatusCode.BadRequest);
 }

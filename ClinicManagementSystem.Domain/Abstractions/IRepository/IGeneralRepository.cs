@@ -1,23 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClinicManagementSystem.Domain.Abstractions.IRepository
 {
-    public interface IGeneralRepository<T> where T : class
+    using System;
+    using System.Collections.Generic;
+    using System.Linq.Expressions;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    namespace ClinicManagementSystem.Domain.Abstractions.IRepository
     {
-        T Get(Expression<Func<T,bool>>filter); // to get one by specific filter you choose 
+        public interface IGeneralRepository<T> where T : class
+        {
+            Task<T?> GetAsync(
+                Expression<Func<T, bool>> filter,
+                CancellationToken cancellationToken = default);
 
-        IEnumerable<T> GetAll(); // to get all
+            Task<List<T>> GetAllAsync(
+                CancellationToken cancellationToken = default);
 
-        void Add(T entity); 
+            Task AddAsync(
+                T entity,
+                CancellationToken cancellationToken = default);
 
-        void Update(T entity); 
+            void Update(T entity);
 
-        void Delete(T entity);
+            void Delete(T entity);
 
-        void DeleteRange(IEnumerable<T> Entites);
-
+            void DeleteRange(IEnumerable<T> entities);
+        }
     }
 }

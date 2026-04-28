@@ -6,7 +6,7 @@ public class Booking
 {
     public Guid Id { get; set; }
 
-    public DateTime BookingDate { get; set; } = DateTime.UtcNow;
+    public DateTime BookingDate { get; set; } 
 
     public DateTime AppointmentDate { get; set; }
     public TimeSpan AppointmentTime { get; set; }
@@ -26,6 +26,6 @@ public class Booking
 
     public Payment? Payment { get; set; }
 
-
+    public DateTime ExpiresAt { get; set; }
 
 }

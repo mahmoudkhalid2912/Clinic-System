@@ -1,9 +1,9 @@
-﻿using ClinicManagementSystem.Domain.Entities;
-using ClinicManagementSystem.Domain.Entities.Enums;
+﻿using ClinicManagementSystem.Domain.Abstractions.IRepository.ClinicManagementSystem.Domain.Abstractions.IRepository;
+using ClinicManagementSystem.Domain.Entities;
 
 namespace ClinicManagementSystem.Domain.Abstractions.IRepository;
 
-public interface IBookingRepository
+public interface IBookingRepository:IGeneralRepository<Booking>
 {
     Task AddAsync(Booking booking);
 
@@ -17,4 +17,6 @@ public interface IBookingRepository
         DateTime date,
         TimeSpan time,
         CancellationToken cancellationToken);
+
+    Task<Result> AddBookingSafeAsync(Booking booking, CancellationToken cancellationToken);
 }

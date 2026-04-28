@@ -1,4 +1,5 @@
-﻿using ClinicManagementSystem.Domain.Entities;
+﻿using ClinicManagementSystem.Domain.Abstractions.IRepository.ClinicManagementSystem.Domain.Abstractions.IRepository;
+using ClinicManagementSystem.Domain.Entities;
 using ClinicManagementSystem.Domain.Entities.Enums;
 using System;
 using System.Collections.Generic;

@@ -15,6 +15,7 @@ public class Payment
     public Guid BookingId { get; set; }
     public Booking Booking { get; set; }
 
-
+    public string? StripePaymentIntentId { get; set; }
+    public string? StripeStatus { get; set; } 
 
 }

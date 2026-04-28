@@ -1,60 +1,66 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq.Expressions;
+﻿using ClinicManagementSystem.Domain.Abstractions.IRepository;
+using ClinicManagementSystem.Domain.Abstractions.IRepository.ClinicManagementSystem.Domain.Abstractions.IRepository;
 using ClinicManagementSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using ClinicManagementSystem.Domain.Abstractions.IRepository;
-namespace ClinicManagementSystem.Infrastructure.persistence.Repository
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ClinicManagementSystem.Infrastructure.Persistence.Repository
 {
     public class GeneralRepository<T> : IGeneralRepository<T> where T : class
     {
-
         private readonly ClinicDbContext _context;
         internal DbSet<T> dbset;
 
         public GeneralRepository(ClinicDbContext context)
         {
-            _context=context;
+            _context = context;
             dbset = context.Set<T>();
         }
 
-
-        public void Add(T entity)
+        // 🟢 Add
+        public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
         {
-            dbset.Add(entity);
+            await dbset.AddAsync(entity, cancellationToken);
         }
 
+        // 🟢 Get one
+        public async Task<T?> GetAsync(
+            Expression<Func<T, bool>> filter,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbset
+                .Where(filter)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        // 🟢 Get all (FIXED)
+        public async Task<List<T>> GetAllAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return await dbset.ToListAsync(cancellationToken);
+        }
+
+        // 🟢 Update
+        public void Update(T entity)
+        {
+            dbset.Update(entity);
+        }
+
+        // 🟢 Delete
         public void Delete(T entity)
         {
             dbset.Remove(entity);
         }
 
-        public void DeleteRange(IEnumerable<T> Entites)
+        // 🟢 Delete range
+        public void DeleteRange(IEnumerable<T> entities)
         {
-            dbset.RemoveRange(Entites);
-        }
-
-        public T Get(Expression<Func<T, bool>> filter)
-        {
-            IQueryable<T> query=dbset;
-            query = dbset.Where(filter);
-
-            return query.FirstOrDefault();
-        }
-
-        public IEnumerable<T> GetAll()
-        {
-            IQueryable<T> query=dbset;
-            return query.ToList();
-            
-        }
-
-        public void Update(T entity)
-        {
-           dbset.Update(entity);
-
+            dbset.RemoveRange(entities);
         }
     }
 }

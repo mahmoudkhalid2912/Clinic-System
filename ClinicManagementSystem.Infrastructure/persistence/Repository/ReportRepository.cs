@@ -1,9 +1,7 @@
 ﻿using ClinicManagementSystem.Domain.Abstractions.IRepository;
 using ClinicManagementSystem.Domain.Entities;
 using ClinicManagementSystem.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using ClinicManagementSystem.Infrastructure.Persistence.Repository;
 
 namespace ClinicManagementSystem.Infrastructure.persistence.Repository
 {

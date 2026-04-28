@@ -1,22 +1,28 @@
 ﻿using ClinicManagementSystem.API.Extensions;
+using ClinicManagementSystem.Application.Commands.Booking;
 using ClinicManagementSystem.Application.Query.Booking;
 using ClinicManagementSystem.Domain.Abstractions.IUnitOfWork;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ClinicManagementSystem.API.Controllers;
 
 [Route("[controller]")]
 [ApiController]
 [Authorize]
-public class BookingController(IMediator mediator, IUnitOfWork unitOfWork) : ControllerBase
+public class BookingController : ControllerBase
 {
-    private readonly IMediator _mediator = mediator;
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMediator _mediator;
+    private readonly IUnitOfWork _unitOfWork;
 
+    public BookingController(IMediator mediator, IUnitOfWork unitOfWork)
+    {
+        _mediator = mediator;
+        _unitOfWork = unitOfWork;
+    }
+
+    // 🟢 Get available slots
     [HttpGet("available-slots")]
     public async Task<IActionResult> GetAvailableSlots([FromQuery] DateTime date)
     {
@@ -28,8 +34,16 @@ public class BookingController(IMediator mediator, IUnitOfWork unitOfWork) : Con
         var result = await _mediator.Send(query);
 
         return result.ToApiResponse("Available slots retrieved successfully");
-
     }
 
-   
+    
+    [HttpPost("add-booking")]
+    public async Task<IActionResult> AddBooking([FromBody] AddBookingCommand command)
+    {
+        var userid = User.GetUserId();
+        command.BookedUserId = userid;
+        var result = await _mediator.Send(command);
+
+        return result.ToApiResponse("Booking created successfully you have 10 minutes to Pay");
+    }
 }
