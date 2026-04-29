@@ -18,5 +18,5 @@ public interface IBookingRepository:IGeneralRepository<Booking>
         TimeSpan time,
         CancellationToken cancellationToken);
 
-    Task<Result> AddBookingSafeAsync(Booking booking, CancellationToken cancellationToken);
+    Task<Result> AddBookingSafeAsync(Booking booking,Payment payment, CancellationToken cancellationToken);
 }

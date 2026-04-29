@@ -65,16 +65,22 @@ public class AddBookingCommandHandler
         {
             Id = Guid.NewGuid(),
             BookingId = booking.Id,
+            DueAmount = 150,       
+            RemainingAmount = 150, 
+            PaidAmount = 0,
+            StripeStatus = "pending",
+            PaymentDate = DateTime.UtcNow,
 
         };
         
 
         // 5. Save safely (handled in Infrastructure)
         var result = await _unitOfWork.BookinRepository
-            .AddBookingSafeAsync(booking, cancellationToken);
+            .AddBookingSafeAsync(booking,Payment, cancellationToken);
 
         if (result.IsFailuer)
             return Result.Failure<AddBookingResultDto>(result.Error);
+       
 
         // 6. Return response
         return Result.Success(new AddBookingResultDto

@@ -17,4 +17,6 @@ public class ApplicationUser: IdentityUser
     public DateTime? ResetPasswordCodeExpiry { get; set; }
 
     public ICollection<Booking> Bookings { get; set; }
+
+    
 }

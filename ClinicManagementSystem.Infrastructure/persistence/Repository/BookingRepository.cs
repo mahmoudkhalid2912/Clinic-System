@@ -61,12 +61,13 @@ public class BookingRepository : GeneralRepository<Booking>, IBookingRepository
     }
 
     public async Task<Result> AddBookingSafeAsync(
-    Booking booking,
+    Booking booking, Payment payment,
     CancellationToken cancellationToken)
     {
         try
         {
             await _context.Bookings.AddAsync(booking, cancellationToken);
+            await _context.Payments.AddAsync(payment, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
@@ -76,4 +77,6 @@ public class BookingRepository : GeneralRepository<Booking>, IBookingRepository
             return Result.Failure(BookingError.SlotAlreadyBooked);
         }
     }
+
+    
 }
