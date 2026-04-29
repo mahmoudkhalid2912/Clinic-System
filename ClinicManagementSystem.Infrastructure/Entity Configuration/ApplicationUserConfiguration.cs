@@ -1,4 +1,5 @@
-﻿using ClinicManagementSystem.Infrastructure.Identity;
+﻿using ClinicManagementSystem.Domain.Entities;
+using ClinicManagementSystem.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,5 +14,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(u=>u.FullName)
             .HasMaxLength(150)
             .IsRequired();
+
+       
     }
 }

@@ -18,7 +18,7 @@ public class StripeService(IOptions<StripeSettings> stripeOptions) : IStripeServ
         try
         {
             StripeConfiguration.ApiKey = stripeOptions.Value.SecretKey;
-
+            Console.WriteLine($"KEY = '{stripeOptions.Value.SecretKey}'");
             var options = new PaymentIntentCreateOptions
             {
                 Amount = (long)(amount * 100), // convert to cents
